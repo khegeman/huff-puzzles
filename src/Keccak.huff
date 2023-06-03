@@ -9,5 +9,24 @@
 
 
  #define macro MAIN() = takes(0) returns(0) {
-    
+     //first push the calldatasize on the stack
+    calldatasize                           //[calldatasize]
+    0x00 eq                                //[iszero]
+    ret jumpi                              //[]
+
+    //copy all call data to memory
+    calldatasize  0x00 0x00 calldatacopy
+
+    calldatasize 0x0 sha3
+
+    //then push a memory location
+    0x00  mstore                           
+
+ret:
+    //push a return length
+    0x20
+    //push a return location
+    0x0
+    //return 
+    return   
  }

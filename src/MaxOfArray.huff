@@ -9,6 +9,88 @@
 
 #define function maxOfArray(uint256[]) payable returns(uint256)
 
+
+
+#define macro MAX() = takes (0) returns (1) {
+    0x04 calldataload    // [offset]
+    0x04 add             // [location]
+    dup1
+    calldataload         // [length, location]
+    
+    dup1 0x0 swap1 gt    // [gt0, length, location]
+    domax jumpi   
+
+    0x0 0x0 revert
+
+domax:    
+    0x20 mul             // [size , location]
+    swap1                // [location , size]
+    dup1                 // [location ,location size]
+    swap2                // [size ,location location]
+    add                  // [end ,location]
+
+    swap1                // [location, end]
+    0x20 add             // [element1, end]
+    
+    0x00                 // [max, element1, end]
+    swap1                // [element1,max,  end]
+loop:
+   dup1
+    calldataload         // [number, element, max , end]
+    swap1                // [element , number, max , end]
+    swap2                // [max , number, element , end]
+    dup1                 // [max, max , number, element , end]
+    dup3                 // [number, max, max , number, element , end]
+    lt                   // [islt, max , number, element , end]
+    cont jumpi
+                            //[max , number, element , end]
+    //new max                            
+    pop                 //[max, element , end]         
+    swap1               //[element ,max,  end]         
+    end_loop jump                
+cont: 
+    //lt case             //[max , number, element , end]
+    swap1                 //[number, max , element , end]
+    pop                   //[max , element , end]
+    swap1                 //[element ,max,  end]
+
+end_loop:    
+    0x20 add             // [next_element , max,  end]
+    dup1                 // [next_element , next_element , max,  end]
+    swap3                // [end , next_element,  max, next_element]
+    dup1                 // [end , end , next_element,  max, next_element]
+    swap4                // [next_element , end , next_element,  max,end]
+
+    gt 
+    //break loop 
+    //after this statement, the stack is the same as it is at the top of the loop.
+    ret jumpi           // [next_element ,  sum, end]
+
+    //loop back to top
+    loop jump
+ret:     
+    swap1                        
+}
+
 #define macro MAIN() = takes(0) returns(0) {
-   
+       // Get the function signature from the calldata
+    0x00 calldataload        // [calldata @ 0x00]
+    0xE0 shr                 // [func_sig (calldata @ 0x00 >> 0xE0)]
+
+
+    __FUNC_SIG(maxOfArray)    
+    eq                      
+    sum jumpi           // []
+
+    // Revert if no function signature matched
+    0x00 0x00 revert
+
+    // Create a jump label
+    sum:
+        // Call the `ADD_WORD` macro with the first calldata
+        // input, store the result in memory, and return it.
+        
+        MAX()           // [result]
+        0x00 mstore          // []
+        0x20 0x00 return
 }

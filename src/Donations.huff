@@ -7,6 +7,52 @@
 
 #define function donated(address) payable returns(uint256)
 
+#define macro GET_SLOT() = takes(1) returns (1) {
+
+    //store the address
+    0x00 mstore 
+
+    //hash the address to a slot
+    0x20 0x00 sha3
+
+}
+
+#define macro DONATED() = takes (1) returns (1) {
+
+    GET_SLOT()
+
+    sload
+}
+
+
 #define macro MAIN() = takes(0) returns(0) {
     
+    0x00 calldataload        // [calldata @ 0x00]
+    0xE0 shr                 // [func_sig (calldata @ 0x00 >> 0xE0)]
+
+
+    __FUNC_SIG(donated)      
+    eq                       
+    donate jumpi           // []
+
+    //else receive
+    caller GET_SLOT()    // [slot]
+    dup1                 // [slot , slot]
+    sload                // [received , slot]
+    callvalue            // [sent, received, slot]
+    add                  // [total, slot]
+    swap1                // [slot , total]
+    sstore
+
+
+    0x00 0x00 return 
+
+
+   donate:
+        // Call the `ADD_WORD` macro with the first calldata
+        // input, store the result in memory, and return it.
+        0x04 calldataload    // [addr]
+        DONATED()           // [result]
+        0x00 mstore          // []
+        0x20 0x00 return
 }

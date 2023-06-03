@@ -11,6 +11,102 @@
 #define function balanceOf(address) payable returns(uint256)
 #define function withdraw(uint256) payable returns()
 
+#define macro GET_SLOT() = takes(1) returns (1) {
+
+    //store the address
+    0x00 mstore 
+
+    //hash the address to a slot
+    0x20 0x00 sha3
+
+}
+
+#define macro BALANCEOF() = takes (1) returns (1) {
+
+    GET_SLOT()
+
+    sload
+}
+
+#define macro WD() = takes (1) returns (0) {
+
+    caller GET_SLOT()   // [slot,amount]
+    sload               // [balance,amount]
+    dup2                // [amount, balance,amount]
+    dup2                // [balance, amount, balance,amount]
+    swap1               // [amount , balance, balance,amount]
+    gt
+    rev jumpi           // [balance,amount]
+
+    dup2                // [amount, balance,amount]
+    swap1               // [balance,amount , amount]
+    sub                 // [newbalance, amount]
+    caller GET_SLOT()   // [slot,newbalalce, amount]
+    sstore              // [amount]
+
+    ///gas, to, value, in offset, in size, out offset, out size
+    0x00 0x00 0x00 0x00 // [0x00 0x00 0x00 0x00 amount]
+    swap4               // [amount 0x00 0x00 0x00 0x00]
+    caller              // [caller amount 0x00 0x00 0x00 0x00]
+    gas call
+
+
+    ret jump 
+
+
+    rev:
+
+    0x00 0x00 revert
+
+
+    ret: 
+
+}
+
+
+
 #define macro MAIN() = takes(0) returns(0) {
+    0x00 calldataload        // [calldata @ 0x00]
+    0xE0 shr                 // [func_sig (calldata @ 0x00 >> 0xE0)]
+
+
+    dup1
+    __FUNC_SIG(balanceOf)      
+    eq                       
+    bal jumpi           // []
+
+    __FUNC_SIG(withdraw)      
+    eq                       
+    wd jumpi           // []
+
+
+    //else receive
+    caller GET_SLOT()    // [slot]
+    dup1                 // [slot , slot]
+    sload                // [received , slot]
+    callvalue            // [sent, received, slot]
+    add                  // [total, slot]
+    swap1                // [slot , total]
+    sstore
+
+
+    0x00 0x00 return 
+
+   wd:
+        // Call the `ADD_WORD` macro with the first calldata
+        // input, store the result in memory, and return it.
+        0x04 calldataload    // [amt]
+        WD()          
+        0x00 0x00 return
+
+   bal:
+        // Call the `ADD_WORD` macro with the first calldata
+        // input, store the result in memory, and return it.
+        0x04 calldataload    // [addr]
+        BALANCEOF()           // [result]
+        0x00 mstore          // []
+        0x20 0x00 return
+
+
 
 }

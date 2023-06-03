@@ -10,4 +10,19 @@
 
 #define macro MAIN() = takes(0) returns(0) {
     
+    //first push the calldatasize on the stack
+    calldatasize    
+    //then push a memory location
+    0x0                               //   [0x0 calldatasize]
+    mstore                            //   []
+
+
+
+    //push a return length
+    0x20
+    //push a return location
+    0x0
+    //return 
+    return
+        
 }

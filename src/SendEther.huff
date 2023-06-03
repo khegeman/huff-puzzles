@@ -10,7 +10,38 @@
 
  #define function sendEther(address) payable returns()
 
+#define macro SEND() = takes (1) returns (0) {
+    ///gas, to, value, in offset, in size, out offset, out size
+    0x00 0x00 0x00 0x00     // [0x00 0x00 0x00 0x00 target]
+    swap4      // [target 0x00 0x00 0x00 0x00]
+    callvalue  // [callvalue target 0x00 0x00 0x00 0x00]
+    swap1      // [target callvalue 0x00 0x00 0x00 0x00]
+    gas       // [gas target callvalue 0x00 0x00 0x00 0x00]
+
+           
+
+
+     call
+}
 
  #define macro MAIN() = takes(0) returns(0) {
-    
+    0x00 calldataload        // [calldata @ 0x00]
+    0xE0 shr                 // [func_sig (calldata @ 0x00 >> 0xE0)]
+
+
+    __FUNC_SIG(sendEther)      
+    eq                       
+    send jumpi           // []
+
+
+    0x00 0x00 revert 
+
+
+   send:
+        // Call the `ADD_WORD` macro with the first calldata
+        // input, store the result in memory, and return it.
+        0x04 calldataload    // [addr]
+        SEND()           // [result]
+        0x00 0x00 return
+
  }

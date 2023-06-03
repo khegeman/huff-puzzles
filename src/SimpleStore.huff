@@ -14,7 +14,48 @@
 #define function store(uint256) payable returns()
 #define function read() payable returns(uint256)
 
+#define macro STORE_ONE() = takes (1) returns (1) {
+    // Input Stack:          // [input_num]
+    0x00
+
+    sstore
+}
 
 #define macro MAIN() = takes(0) returns(0) {
+    // Get the function signature from the calldata
+    0x00 calldataload        // [calldata @ 0x00]
+    0xE0 shr                 // [func_sig (calldata @ 0x00 >> 0xE0)]
+
+    dup1
+    // Check if the function signature in the calldata is
+    // a match to our `addWord` function definition.
+    // More about the `__FUNC_SIG` builtin in the `Builtin Functions`
+    // section.
+    __FUNC_SIG(store)      // [func_sig(foo), func_sig]
+    eq                       // [func_sig(foo) == func_sig]
+    store_1 jumpi           // []
+
+    __FUNC_SIG(read)      // [func_sig(bar), func_sig]
+    eq                       // [func_sig(bar) == func_sig]
+    read_1 jumpi           // []
+
+    // Revert if no function signature matched
+    0x00 0x00 revert
+
+    // Create a jump label
+    store_1:
+
+        0x04 calldataload    // [input_num]
+        STORE_ONE()
+        
+        0x20 0x00 return
+
+    read_1:
+        // Call the `ADD_WORD` macro with the first calldata
+        // input, store the result in memory, and return it.
+        0x00
+        sload
+        0x00 mstore
+        0x20 0x00 return
     
 }

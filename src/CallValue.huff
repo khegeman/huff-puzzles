@@ -9,5 +9,19 @@
 */
 
 #define macro MAIN() = takes(0) returns(0) {
+    //first push the callvalue on the stack
+    callvalue    
+    //then push a memory location
+    0x0                               //   [0x0 callvalue]
+    mstore                            //   []
+
+
+
+    //push a return length
+    0x20
+    //push a return location
+    0x0
+    //return 
+    return
     
 }

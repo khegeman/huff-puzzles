@@ -1,4 +1,4 @@
- 
+ #include "./Console.huff"
 /** 
  *  DISTRIBUTE HUFF EXERCISE
  *  
@@ -13,6 +13,90 @@
  #define function distribute(address[]) payable returns()
 
 
+#define macro DISTRIBUTE() = takes(0) returns(0) {
+
+    //array is in call data 
+
+    0x04 calldataload    // [offset]    
+    0x04 add             // [location]
+    dup1
+    calldataload         // [length, location]
+
+    //if length is 0 we need to revert 
+    dup1 iszero 
+    rev jumpi
+    dup1                // [length , length, location]
+    callvalue           // [value, length , length, location]
+    div                 // [to_send , length, location]
+    swap2               // [location , length, to_send]
+    swap1               // [length, location , to_send]
+
+
+    0x20 mul             // [size , location, to_send]
+    swap1                // [location , size, to_send]
+    dup1                 // [location ,location size, to_send]
+    swap2                // [size ,location location, to_send]
+    add                  // [end ,location, to_send]
+
+    swap1                // [location, end, to_send]
+    0x20 add             // [element1, end, to_send]
+loop:
+   dup1
+
+    calldataload         // [address, element, end, to_send]
+    swap1                // [element, address, end, to_send]      
+    swap3                // [to_send, address, end, element]
+    dup1                 // [to_send,  to_send, address, end, element]
+    swap2                // [address,  to_send, to_send, end, element]
+    swap1                // [to_send,  address, to_send, end, element]
+    0x00 0x00 0x00 0x00  // [0x00 0x00 0x00 0x00 , to_send, address,to_send, end, element]
+    swap4                // [to_send 0x00 0x00 0x00 ,0x00 , address,to_send end, element]
+    swap1                // [0x00  to_send 0x00 0x00 , 0x00, address,to_send, end, element]
+    swap5                // [address  to_send 0x00 0x00 ,0x00 , 0x00,to_send, end, element]
+    
+    gas  call 
+                         // [result, to_send, end, element]
+    pop                  // [to_send, end, element]
+
+    swap2               // [element , end, to_send]
+
+    0x20 add             // [next_element ,  end, to_send]
+    dup1                 // [next_element , next_element ,  end, to_send]
+    swap2                // [end , next_element,  next_element, to_send]
+    dup1                 // [end , end , next_element,  next_element, to_send]
+    swap3                // [next_element , end , next_element, end , to_send]
+
+    gt 
+    //break loop 
+    //after this statement, the stack is the same as it is at the top of the loop.
+    ret jumpi           // [next_element, end , to_send]
+
+    //loop back to top
+    loop jump
+
+rev: 
+   0x00 0x00 revert 
+
+ret:  
+
+
+}
+
  #define macro MAIN() = takes(0) returns(0) {
-   
+    // Get the function signature from the calldata
+    0x00 calldataload        // [calldata @ 0x00]
+    0xE0 shr                 // [func_sig (calldata @ 0x00 >> 0xE0)]
+
+    __FUNC_SIG(distribute)      // [func_sig(foo), func_sig]
+    eq                       // [func_sig(foo) == func_sig]
+    dist jumpi           // []
+
+    // Revert if no function signature matched
+    0x00 0x00 revert
+
+
+    dist:
+
+        DISTRIBUTE()
+        0x00 0x00 return   
  }

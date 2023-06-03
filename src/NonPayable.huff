@@ -9,5 +9,22 @@
  */
 
 #define macro MAIN() = takes(0) returns(0) {
+    
+    callvalue
+    0x00                            //   [0x00 callvalue]
+    swap1                           //   [callvalue 0x00]
+    gt                              //   [callvalue > 0]
+    nonpayable jumpi
+    
+    //return scratch space
+    0x20
+    0x00
+
+    return   
+
+    nonpayable:
+        0x00
+        0x00
+        revert
 
 }

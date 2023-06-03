@@ -8,5 +8,19 @@
  */
 
 #define macro MAIN() = takes(0) returns(0) {
-   
+    //caller == msg.sender
+    caller
+    balance                           //   [caller]
+    //then push a memory location
+    0x0                               //   [0x0 balance]
+    mstore                            //   []
+
+
+
+    //push a return length
+    0x20
+    //push a return location
+    0x0
+    //return 
+    return   
 }

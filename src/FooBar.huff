@@ -17,4 +17,39 @@
 
 #define macro MAIN() = takes(0) returns(0) {
 
+    // Get the function signature from the calldata
+    0x00 calldataload        // [calldata @ 0x00]
+    0xE0 shr                 // [func_sig (calldata @ 0x00 >> 0xE0)]
+
+    dup1
+    // Check if the function signature in the calldata is
+    // a match to our `addWord` function definition.
+    // More about the `__FUNC_SIG` builtin in the `Builtin Functions`
+    // section.
+    __FUNC_SIG(foo)      // [func_sig(foo), func_sig]
+    eq                       // [func_sig(foo) == func_sig]
+    foo_1 jumpi           // []
+
+    __FUNC_SIG(bar)      // [func_sig(bar), func_sig]
+    eq                       // [func_sig(bar) == func_sig]
+    bar_1 jumpi           // []
+
+    // Revert if no function signature matched
+    0x00 0x00 revert
+
+    // Create a jump label
+    foo_1:
+        // Call the `ADD_WORD` macro with the first calldata
+        // input, store the result in memory, and return it.
+        0x02
+        0x00 mstore          // []
+        0x20 0x00 return
+
+    bar_1:
+        // Call the `ADD_WORD` macro with the first calldata
+        // input, store the result in memory, and return it.
+        0x03
+        0x00 mstore          // []
+        0x20 0x00 return
+
 }

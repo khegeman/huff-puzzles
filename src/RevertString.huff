@@ -13,5 +13,17 @@
 
 
 #define macro MAIN() = takes(0) returns(0) {
+
+    // https://docs.huff.sh/tutorial/hello-world/#primer-abi-encoding
+    //abi encoded string returned
     
+    //location of the string
+    0x20                       
+    0x00 mstore    
+    //strings are length first , followed by the bytes
+    0x09
+    0x20 mstore
+    __RIGHTPAD(0x4f6e6c792048756666)
+    0x40 mstore          
+    0x60 0x00 revert    
 }

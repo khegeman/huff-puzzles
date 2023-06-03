@@ -11,7 +11,36 @@
  
  #define event Value(uint256 indexed, uint256)
 
+//return address after creating a new contract
+#define macro EMIT() = takes (2) returns (0) {
+
+    0x00 mstore
+    __EVENT_HASH(Value)      // [sig, input_num1]
+    0x20 0x00                // [mem_start, mem_end, sig, input_num1]
+    log2                     // []
+}
+
+
 
  #define macro MAIN() = takes(0) returns(0) {
-    
+    // Get the function signature from the calldata
+    0x00 calldataload        // [calldata @ 0x00]
+    0xE0 shr                 // [func_sig (calldata @ 0x00 >> 0xE0)]
+
+
+    __FUNC_SIG(value)    
+    eq                      
+    val jumpi           // []
+
+    // Revert if no function signature matched
+    0x00 0x00 revert
+
+    // Create a jump label
+    val:
+
+        0x04 calldataload    // [input_num1]
+        0x24 calldataload    // [input_num2, input_num1]        
+        EMIT()           // [result]
+       // 0x00 mstore          // []
+        0x00 0x00 return       
  }

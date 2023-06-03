@@ -12,6 +12,38 @@
  #define function makeContract() payable returns(address)
 
 
+
+//return address after creating a new contract
+#define macro MAKECONTRACT() = takes (0) returns (1) {
+//contract code
+    __RIGHTPAD(0x600C600C600039600C6000F3620caffe60005260206000F3)
+    0x00 mstore
+    //length location value
+    0x20 0x00 0x00 create 
+
+
+
+}
+
  #define macro MAIN() = takes(0) returns(0) {
-    
+    // Get the function signature from the calldata
+    0x00 calldataload        // [calldata @ 0x00]
+    0xE0 shr                 // [func_sig (calldata @ 0x00 >> 0xE0)]
+
+
+    __FUNC_SIG(makeContract)    
+    eq                      
+    mc jumpi           // []
+
+    // Revert if no function signature matched
+    0x00 0x00 revert
+
+    // Create a jump label
+    mc:
+        // Call the `ADD_WORD` macro with the first calldata
+        // input, store the result in memory, and return it.
+        
+        MAKECONTRACT()           // [result]
+        0x00 mstore          // []
+        0x20 0x00 return    
  }

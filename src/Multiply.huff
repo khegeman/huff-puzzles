@@ -11,7 +11,70 @@
 
 #define function multiply(uint256, uint256) payable returns(uint256)
 
+// Add a word (32 bytes) to a uint 
+#define macro MULTIPLY() = takes (2) returns (1) {
+    // Input Stack:          // [input_num2,input_num1]
+    
+    dup1                     // [input_num2,input_num2, input_num1]
+    dup3                     // [input_num1,input_num2, input_num2, input_num1]
+    
+    mul                      // [result, input_num2, input_num1]
+
+    swap1                    // [input_num2, result, input_num1]
+    dup1                    // [input_num2, input_num2, result, input_num1]
+    swap2                  //  [result, input_num2, input_num2, input_num1]
+    swap1                  //  [input_num2,result, input_num2, input_num1]    
+    0x00
+    eq 
+    ret jumpi              // [result, input_num2, input_num1]
+
+    //we need to check for overlow
+    //result/num2 = num1 ? 
+    dup1                  // [result, result, input_num2, input_num1]
+    swap2                 // [input_num2, result, result, input_num1]
+    swap1                 // [result, input_num2, result, input_num1]
+    div                   // [result / input_num2 ,result , input_num1]
+    swap1                 // [result, result / input_num2 , input_num1]
+    swap2                 // [input_num1, result / input_num2 , result]
+    eq 
+    ret jumpi              // [result]
+
+    overflow:
+        0x00
+        0x00
+        revert
+   ret:
+    0x0
+    mstore 
+    0x20
+    0x0
+    return 
+
+}
 
 #define macro MAIN() = takes(0) returns(0) {
+    // Get the function signature from the calldata
+    0x00 calldataload        // [calldata @ 0x00]
+    0xE0 shr                 // [func_sig (calldata @ 0x00 >> 0xE0)]
 
+    // Check if the function signature in the calldata is
+    // a match to our `addWord` function definition.
+    // More about the `__FUNC_SIG` builtin in the `Builtin Functions`
+    // section.
+    __FUNC_SIG(multiply)      // [func_sig(addWord), func_sig]
+    eq                       // [func_sig(addWord) == func_sig]
+    add_1 jumpi           // []
+
+    // Revert if no function signature matched
+    0x00 0x00 revert
+
+    // Create a jump label
+    add_1:
+        // Call the `ADD_WORD` macro with the first calldata
+        // input, store the result in memory, and return it.
+        0x04 calldataload    // [input_num1]
+        0x24 calldataload    // [input_num2, input_num1]
+        MULTIPLY()           // [result]
+        0x00 mstore          // []
+        0x20 0x00 return
 }
